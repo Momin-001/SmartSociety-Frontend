@@ -64,9 +64,24 @@ export const getPaymentHistory = async (userId) => {
     }
 };
 
+/**
+ * Get payment histories for many users in a single request.
+ */
+export const getPaymentHistories = async (userIds) => {
+    try {
+        const response = await axios.post(`${API_URL}/payment-history/batch`, { userIds });
+        // Expected shape: { [userId]: Array<{ id, month, type, amount, status, dueDate, paidAt }> }
+        return response.data || {};
+    } catch (error) {
+        console.error('Error fetching payment histories (batch):', error);
+        throw error;
+    }
+};
+
 export const paymentService = {
     createPaymentIntent,
     confirmPaymentOnServer,
     generateMonthlyBills,
     getPaymentHistory,
+    getPaymentHistories,
 };

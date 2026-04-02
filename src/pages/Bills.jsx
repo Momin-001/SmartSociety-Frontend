@@ -206,22 +206,17 @@ const Bills = () => {
             // Gather unique user IDs from pending bills
             const userIds = [...new Set(pendingBills.map(b => b.userId))];
 
-            // Fetch 6-month payment history for each user
+            // Fetch 6-month payment histories for all users in one request
+            const historiesByUser = await paymentService.getPaymentHistories(userIds);
+
             const historyByUser = {};
-            await Promise.all(
-                userIds.map(async (uid) => {
-                    try {
-                        const history = await paymentService.getPaymentHistory(uid);
-                        // Count late payments
-                        const lateCount = history.filter(
-                            h => h.status === 'overdue' || h.status === 'late'
-                        ).length;
-                        historyByUser[uid] = { history, lateCount };
-                    } catch {
-                        historyByUser[uid] = { history: [], lateCount: 0 };
-                    }
-                })
-            );
+            userIds.forEach((uid) => {
+                const history = historiesByUser?.[uid] || [];
+                const lateCount = history.filter(
+                    h => h.status === 'overdue' || h.status === 'late'
+                ).length;
+                historyByUser[uid] = { history, lateCount };
+            });
 
             // Build payload with payment history
             const payload = pendingBills.map(b => ({
